@@ -5,9 +5,20 @@ Programmed by William Harrington
 
 wrh2.github.io
 """
-import smbus
+#import smbus
+import spidev
 
-bus = smbus.SMBus(1)
+#bus = smbus.SMBus(1)
+spi = spidev.SpiDev()
+# /dev/spidev0.0
+spi.open(0, 0)
+
+# Settings (for example)
+spi.max_speed_hz = 20000000
+spi.mode = 0b00
+spi.bits_per_word = 8
+
+
 
 ACC_ODR_POWER_DOWN = 0
 ACC_ODR_12_5_HZ = 1
@@ -310,6 +321,7 @@ class LSM6DS3:
         current = self.__read_reg(reg)
         return data == current
 
+    '''
     def __read_reg(self, reg, b=1):
         try:
             if b == 1:
@@ -326,7 +338,30 @@ class LSM6DS3:
             else:
                 return bus.write_i2c_block_data(self.DEVICE_ADDRESS, reg, data)
         except Exception as e:
-            print 'Caught exception %s' % e
+            print('Caught exception %s' % e)
+    '''
+
+    def __read_reg(self, reg, b=1):
+        tr = [0xFF] * (b + 1)
+        tr[0] = 0x80 | reg;
+
+        try:
+            spi.xfer(tr)
+            if b == 1:
+                return tr[1]
+            else:
+                return tr[1:]
+        except Exception as e:
+            print('Caught exception %s' % e)
+
+    def __write_reg(self, reg, data, b=1):
+        tr = [0xFF] * (b + 1)
+        tr[0] = 0x00 | reg;
+        tr[1:] = data if b != 1 else [data]
+        try:
+            return spi.xfer(tr)
+        except Exception as e:
+            print('Caught exception %s' % e)
 
     def __twos_complement(self, x, bits=16):
         mask = 2**(bits-1)
