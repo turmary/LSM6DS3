@@ -187,6 +187,12 @@ class LSM6DS3:
         if self.gyro_enabled: self.enableGyroscope()
         else: self.disableGyroscope()
 
+        # Setup to continous mode
+        v = self.__read_reg(self.regs['FIFO_CTRL5'])
+        v = (v & ~0x7)  | 0x3
+        v = (v & ~0x78) | 0x50
+        self.__write_reg(self.regs['FIFO_CTRL5'], v)
+
         return True
         
     def __setupRegisterMap(self):
