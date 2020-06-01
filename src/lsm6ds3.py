@@ -688,3 +688,6 @@ class LSM6DS3:
         acc_data = self.getAccData()
         gyro_data = self.getGyroData()
         return acc_data + gyro_data
+
+    def getID(self):
+        return self.__read_reg(self.regs['WHO_AM_I'])
